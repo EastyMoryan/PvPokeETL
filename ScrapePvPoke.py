@@ -2,7 +2,7 @@ import csv
 
 
 # Ranking is 1500 for GL, 2500 for UL, 10000 for ML
-def scrape_format(ranking, resultsdict, formsdict):
+def scrape_format(ranking, formsdict):
     filename = "RankingsExports/cp{}_all_overall_rankings.csv".format(ranking)
     if ranking == 1500:
         league = "GL"
@@ -28,20 +28,19 @@ def scrape_format(ranking, resultsdict, formsdict):
                     form = form[:-1]
             dexnum = int(row["Dex"])
             if not form:
-                if dexnum not in resultsdict:
-                    resultsdict[dexnum] = {"dexnum": dexnum}
-                shadow_aware_league = "{}{}".format(league, "(S)" if shadow else "")
-                if shadow_aware_league not in resultsdict[dexnum]:
-                    resultsdict[dexnum][shadow_aware_league] = i+1
-            else:
-                if i > 130 or (league == "ML" and i > 50):
-                    continue
-                if (dexnum, form) not in formsdict:
-                    formsdict[(dexnum, form)] = {"dexnum": dexnum, "form": form}
-                shadow_aware_league = "{}{}".format(league, "(S)" if shadow else "")
-                if shadow_aware_league not in formsdict[(dexnum, form)]:
-                    formsdict[(dexnum, form)][shadow_aware_league] = i + 1
-    return resultsdict, formsdict
+                form = "Normal"
+
+            # Dump to results
+
+            if i > 130 or (league == "ML" and i > 70):
+                continue
+            if (dexnum, form) not in formsdict:
+                formsdict[(dexnum, form)] = {"dexnum": dexnum, "form": form}
+            shadow_aware_league = "{}{}".format(league, "(S)" if shadow else "")
+            if shadow_aware_league not in formsdict[(dexnum, form)]:
+                formsdict[(dexnum, form)][shadow_aware_league] = i + 1
+
+    return formsdict
 
 
 def dump_to_csv(results):
@@ -82,16 +81,14 @@ def dump_to_csv_with_form(formsdict):
 
 
 def scrape_all():
-    results = dict()
     forms = dict()
     # scrape GL, put into list
-    results, forms = scrape_format(1500, results, forms)
+    forms = scrape_format(1500, forms)
     # scrape UL, put into list
-    results, forms = scrape_format(2500, results, forms)
+    forms = scrape_format(2500, forms)
     # scrape ML, put into list
-    results, forms = scrape_format(10000, results, forms)
+    forms = scrape_format(10000, forms)
     # dump to CSV
-    dump_to_csv(results)
     dump_to_csv_with_form(forms)
 
 
